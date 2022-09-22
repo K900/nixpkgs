@@ -1197,6 +1197,9 @@ with pkgs;
   adminer = callPackage ../servers/adminer { };
 
   akkoma = callPackage ../servers/akkoma { };
+  akkoma-frontends = recurseIntoAttrs {
+    pleroma-fe = callPackage ../servers/akkoma/pleroma-fe { };
+  };
 
   advancecomp = callPackage ../tools/compression/advancecomp {};
 
