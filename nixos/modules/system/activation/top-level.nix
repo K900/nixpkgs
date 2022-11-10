@@ -14,8 +14,7 @@ let
         inherit
           config
           pkgs
-          lib
-          children;
+          lib;
       };
     in ''
       mkdir $out

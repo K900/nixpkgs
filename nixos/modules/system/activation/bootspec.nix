@@ -3,7 +3,7 @@
 # Changes to the structure of the document, or the semantics of the values should go through an RFC.
 #
 # See: https://github.com/NixOS/rfcs/pull/125
-{ config, pkgs, lib, children }:
+{ config, pkgs, lib }:
 let
   schemas = {
     v1 = rec {
@@ -24,8 +24,8 @@ let
       generator =
         let
           specialisationLoader = (lib.mapAttrsToList
-            (childName: childToplevel: lib.escapeShellArgs [ "--slurpfile" childName "${childToplevel}/${filename}" ])
-            children);
+            (name: specConfig: lib.escapeShellArgs [ "--slurpfile" name "${specConfig.configuration.system.build.toplevel}/${filename}" ])
+            config.specialisation);
         in
         ''
           mkdir -p $out/bootspec
