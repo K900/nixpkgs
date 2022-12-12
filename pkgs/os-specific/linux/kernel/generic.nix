@@ -7,6 +7,10 @@
 , libmpc ? null
 , mpfr ? null
 , pahole
+, rustc
+, cargo
+, rust-bindgen
+, rustPlatform
 , lib
 , stdenv
 
@@ -126,7 +130,10 @@ let
     depsBuildBuild = [ buildPackages.stdenv.cc ];
     nativeBuildInputs = [ perl gmp libmpc mpfr ]
       ++ lib.optionals (lib.versionAtLeast version "4.16") [ bison flex ]
-      ++ lib.optional (lib.versionAtLeast version "5.2") pahole;
+      ++ lib.optional (lib.versionAtLeast version "5.2") pahole
+      ++ lib.optionals (lib.versionAtLeast version "6.1") [ rustc cargo rust-bindgen ];
+
+    RUST_LIB_SRC = if (lib.versionAtLeast version "6.1") then rustPlatform.rustLibSrc else null;
 
     platformName = stdenv.hostPlatform.linux-kernel.name;
     # e.g. "defconfig"

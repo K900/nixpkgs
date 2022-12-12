@@ -1,5 +1,6 @@
 { lib, buildPackages, runCommand, nettools, bc, bison, flex, perl, rsync, gmp, libmpc, mpfr, openssl
 , libelf, cpio, elfutils, zstd, python3Minimal, zlib, pahole
+, rustc, cargo, rust-bindgen, rustPlatform
 }:
 
 let
@@ -369,7 +370,10 @@ stdenv.mkDerivation ((drvAttrs config stdenv.hostPlatform.linux-kernel kernelPat
       ++ optionals (lib.versionAtLeast version "4.16") [ bison flex ]
       ++ optionals (lib.versionAtLeast version "5.2")  [ cpio pahole zlib ]
       ++ optional  (lib.versionAtLeast version "5.8")  elfutils
+      ++ optionals (lib.versionAtLeast version "6.1") [ rustc cargo rust-bindgen ]
       ;
+
+  RUST_LIB_SRC = if (lib.versionAtLeast version "6.1") then rustPlatform.rustLibSrc else null;
 
   hardeningDisable = [ "bindnow" "format" "fortify" "stackprotector" "pic" "pie" ];
 
