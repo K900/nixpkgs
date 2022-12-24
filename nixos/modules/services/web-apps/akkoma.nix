@@ -343,13 +343,13 @@ let
 
     ${concatStringsSep "\n" (mapAttrsToList (key: val: ''
       mkdir -p $out/frontends/${escapeShellArg val.name}/${escapeShellArg val.ref}
-      cp -R --reflink=auto ${escapeShellArg val.package} $out/frontends/${escapeShellArg val.name}/${escapeShellArg val.ref}/
+      cp -R --reflink=auto ${escapeShellArg val.package}/* $out/frontends/${escapeShellArg val.name}/${escapeShellArg val.ref}/
     '') cfg.frontends)}
 
     ${optionalString (cfg.emojiPacks != null) ''
       mkdir -p $out/emoji
       ${concatStringsSep "\n" (mapAttrsToList
-        (key: val: "cp -R --reflink=auto ${escapeShellArg val} $out/emoji/${escapeShellArg key}/")
+        (key: val: "cp -R --reflink=auto ${escapeShellArg val}/* $out/emoji/${escapeShellArg key}/")
         cfg.emojiPacks)}
     ''}
   '';
