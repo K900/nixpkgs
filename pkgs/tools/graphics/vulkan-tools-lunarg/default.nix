@@ -1,5 +1,5 @@
 { lib
-, stdenv
+, mkDerivation
 , fetchFromGitHub
 , cmake
 , python3
@@ -20,9 +20,12 @@
 , symlinkJoin
 , vulkan-validation-layers
 , writeText
+, qtbase
+, qtwayland
+, wrapQtAppsHook
 }:
 
-stdenv.mkDerivation rec {
+mkDerivation rec {
   pname = "vulkan-tools-lunarg";
   version = "1.3.249";
 
@@ -34,7 +37,7 @@ stdenv.mkDerivation rec {
    fetchSubmodules = true;
  };
 
-  nativeBuildInputs = [ cmake python3 jq which pkg-config ];
+  nativeBuildInputs = [ cmake python3 jq which pkg-config wrapQtAppsHook ];
 
   buildInputs = [
     expat
@@ -44,6 +47,8 @@ stdenv.mkDerivation rec {
     libffi
     libxcb
     wayland
+    qtbase
+    qtwayland
     xcbutilkeysyms
     xcbutilwm
   ];

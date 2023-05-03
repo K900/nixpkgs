@@ -24231,7 +24231,7 @@ with pkgs;
     inherit (darwin) moltenvk;
     inherit (darwin.apple_sdk.frameworks) AppKit Cocoa;
   };
-  vulkan-tools-lunarg = callPackage ../tools/graphics/vulkan-tools-lunarg { };
+  vulkan-tools-lunarg = libsForQt5.callPackage ../tools/graphics/vulkan-tools-lunarg { };
   vulkan-validation-layers = callPackage ../development/tools/vulkan-validation-layers { };
 
   vxl = callPackage ../development/libraries/vxl { };
