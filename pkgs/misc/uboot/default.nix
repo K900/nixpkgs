@@ -4,6 +4,7 @@
 , bison
 , dtc
 , fetchFromGitHub
+, fetchFromGitLab
 , fetchpatch
 , fetchurl
 , flex
@@ -70,6 +71,7 @@ let
       (buildPackages.python3.withPackages (p: [
         p.libfdt
         p.setuptools # for pkg_resources
+        p.pyelftools
       ]))
       swig
       which # for scripts/dtc-version.sh
@@ -521,6 +523,35 @@ in {
     extraMeta.platforms = ["aarch64-linux"];
     BL31="${armTrustedFirmwareRK3399}/bl31.elf";
     filesToInstall = [ "u-boot.itb" "idbloader.img"];
+  };
+
+  ubootRock5B = let
+    rkbin = fetchFromGitHub {
+      owner = "radxa";
+      repo = "rkbin";
+      rev = "d6aad64d4874b416f25669748a9ae5592642a453";
+      hash = "sha256-ggPBwvP8dlsR1VWWlHJG2ItP83xVlbrbCrsxcoYW8kw=";
+    };
+  in
+  buildUBoot {
+    src = fetchFromGitLab {
+      owner = "u-boot";
+      repo = "u-boot";
+      rev = "62df7a39442902a71259568c13a4d496d5a514f4";
+      domain = "source.denx.de";
+      hash = "sha256-QSTWKtd90igjBLostvkq1dy6mDHxQHipu8XuOJP03R0=";
+    };
+    patches = [];
+
+    version = "unstable-2023-05-19";
+
+    defconfig = "rock5b-rk3588_defconfig";
+    extraMeta.platforms = ["aarch64-linux"];
+
+    BL31 = "${rkbin}/bin/rk35/rk3588_bl31_v1.34.elf";
+    ROCKCHIP_TPL = "${rkbin}/bin/rk35/rk3588_ddr_lp4_2112MHz_lp5_2736MHz_v1.08.bin";
+
+    filesToInstall = ["u-boot.itb" "idbloader.img"];
   };
 
   ubootROCPCRK3399 = buildUBoot {
