@@ -92,6 +92,9 @@ let
       X86_AMD_PSTATE                   = whenAtLeast "5.17" yes;
       # Intel DPTF (Dynamic Platform and Thermal Framework) Support
       ACPI_DPTF                        = whenAtLeast "5.10" yes;
+
+      # Required to bring up some Bay Trail devices properly
+      PMIC_OPREGION                    = whenAtLeast "5.10" yes;
     };
 
     external-firmware = {
