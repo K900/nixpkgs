@@ -1,0 +1,246 @@
+diff --git a/meson_options.txt b/meson_options.txt
+index 379aea30e4b..4b61661f960 100644
+--- a/meson_options.txt
++++ b/meson_options.txt
+@@ -327,6 +327,16 @@ option(
+                 'separated list. Default: $libdir/gbm.'
+ )
+ 
++option(
++  'gbm-backends-search-path',
++  type : 'string',
++)
++
++option(
++  'glapi-path',
++  type : 'string',
++)
++
+ option(
+   'glx',
+   type : 'combo',
+diff --git a/src/gbm/backends/dri/gbm_dri.c b/src/gbm/backends/dri/gbm_dri.c
+index ed76087b20b..49899b67da6 100644
+--- a/src/gbm/backends/dri/gbm_dri.c
++++ b/src/gbm/backends/dri/gbm_dri.c
+@@ -53,11 +53,15 @@
+ #include "util/u_debug.h"
+ #include "util/macros.h"
+ 
++#include "gbm_backend_abi.h"
++
+ /* For importing wl_buffer */
+ #if HAVE_WAYLAND_PLATFORM
+ #include "wayland-drm.h"
+ #endif
+ 
++static struct gbm_core *core;
++
+ static __DRIimage *
+ dri_lookup_egl_image(__DRIscreen *screen, void *image, void *data)
+ {
+@@ -527,7 +531,7 @@ static const struct gbm_dri_visual gbm_dri_visuals_table[] = {
+ static int
+ gbm_format_to_dri_format(uint32_t gbm_format)
+ {
+-   gbm_format = gbm_core.v0.format_canonicalize(gbm_format);
++   gbm_format = core->v0.format_canonicalize(gbm_format);
+    for (size_t i = 0; i < ARRAY_SIZE(gbm_dri_visuals_table); i++) {
+       if (gbm_dri_visuals_table[i].gbm_format == gbm_format)
+          return gbm_dri_visuals_table[i].dri_image_format;
+@@ -558,7 +562,7 @@ gbm_dri_is_format_supported(struct gbm_device *gbm,
+    if ((usage & GBM_BO_USE_CURSOR) && (usage & GBM_BO_USE_RENDERING))
+       return 0;
+ 
+-   format = gbm_core.v0.format_canonicalize(format);
++   format = core->v0.format_canonicalize(format);
+    if (gbm_format_to_dri_format(format) == 0)
+       return 0;
+ 
+@@ -595,7 +599,7 @@ gbm_dri_get_format_modifier_plane_count(struct gbm_device *gbm,
+        !dri->image->queryDmaBufFormatModifierAttribs)
+       return -1;
+ 
+-   format = gbm_core.v0.format_canonicalize(format);
++   format = core->v0.format_canonicalize(format);
+    if (gbm_format_to_dri_format(format) == 0)
+       return -1;
+ 
+@@ -942,7 +946,7 @@ gbm_dri_bo_import(struct gbm_device *gbm,
+       /* GBM's GBM_FORMAT_* tokens are a strict superset of the DRI FourCC
+        * tokens accepted by createImageFromFds, except for not supporting
+        * the sARGB format. */
+-      fourcc = gbm_core.v0.format_canonicalize(fd_data->format);
++      fourcc = core->v0.format_canonicalize(fd_data->format);
+ 
+       image = dri->image->createImageFromFds(dri->screen,
+                                              fd_data->width,
+@@ -975,7 +979,7 @@ gbm_dri_bo_import(struct gbm_device *gbm,
+       /* GBM's GBM_FORMAT_* tokens are a strict superset of the DRI FourCC
+        * tokens accepted by createImageFromDmaBufs2, except for not supporting
+        * the sARGB format. */
+-      fourcc = gbm_core.v0.format_canonicalize(fd_data->format);
++      fourcc = core->v0.format_canonicalize(fd_data->format);
+ 
+       image = dri->image->createImageFromDmaBufs2(dri->screen, fd_data->width,
+                                                   fd_data->height, fourcc,
+@@ -1105,7 +1109,7 @@ gbm_dri_bo_create(struct gbm_device *gbm,
+    int dri_format;
+    unsigned dri_use = 0;
+ 
+-   format = gbm_core.v0.format_canonicalize(format);
++   format = core->v0.format_canonicalize(format);
+ 
+    if (usage & GBM_BO_USE_WRITE || dri->image == NULL)
+       return create_dumb(gbm, width, height, format, usage);
+@@ -1268,7 +1272,7 @@ gbm_dri_surface_create(struct gbm_device *gbm,
+    surf->base.gbm = gbm;
+    surf->base.v0.width = width;
+    surf->base.v0.height = height;
+-   surf->base.v0.format = gbm_core.v0.format_canonicalize(format);
++   surf->base.v0.format = core->v0.format_canonicalize(format);
+    surf->base.v0.flags = flags;
+    if (!modifiers) {
+       assert(!count);
+@@ -1331,8 +1335,8 @@ dri_device_create(int fd, uint32_t gbm_backend_version)
+     * Since the DRI backend is built-in to the loader, the loader ABI version is
+     * guaranteed to match this backend's ABI version
+     */
+-   assert(gbm_core.v0.core_version == GBM_BACKEND_ABI_VERSION);
+-   assert(gbm_core.v0.core_version == gbm_backend_version);
++   assert(core->v0.core_version == GBM_BACKEND_ABI_VERSION);
++   assert(core->v0.core_version == gbm_backend_version);
+ 
+    dri = calloc(1, sizeof *dri);
+    if (!dri)
+@@ -1392,3 +1396,11 @@ struct gbm_backend gbm_dri_backend = {
+    .v0.backend_name = "dri",
+    .v0.create_device = dri_device_create,
+ };
++
++struct gbm_backend * gbmint_get_backend(const struct gbm_core *gbm_core);
++
++PUBLIC struct gbm_backend *
++gbmint_get_backend(const struct gbm_core *gbm_core) {
++   core = gbm_core;
++   return &gbm_dri_backend;
++};
+diff --git a/src/gbm/main/backend.c b/src/gbm/main/backend.c
+index feee0703495..e7c2fe8ae78 100644
+--- a/src/gbm/main/backend.c
++++ b/src/gbm/main/backend.c
+@@ -42,22 +42,12 @@
+ #define ARRAY_SIZE(a) (sizeof(a)/sizeof((a)[0]))
+ #define VER_MIN(a, b) ((a) < (b) ? (a) : (b))
+ 
+-#if defined(HAVE_DRI) || defined(HAVE_DRI2) || defined(HAVE_DRI3)
+-extern const struct gbm_backend gbm_dri_backend;
+-#endif
+-
+ struct gbm_backend_desc {
+    const char *name;
+    const struct gbm_backend *backend;
+    void *lib;
+ };
+ 
+-static const struct gbm_backend_desc builtin_backends[] = {
+-#if defined(HAVE_DRI) || defined(HAVE_DRI2) || defined(HAVE_DRI3)
+-   { "dri", &gbm_dri_backend },
+-#endif
+-};
+-
+ #define BACKEND_LIB_SUFFIX "_gbm"
+ static const char *backend_search_path_vars[] = {
+    "GBM_BACKENDS_PATH",
+@@ -150,21 +140,14 @@ static struct gbm_device *
+ find_backend(const char *name, int fd)
+ {
+    struct gbm_device *dev = NULL;
+-   const struct gbm_backend_desc *bd;
+-   void *lib;
+-   unsigned i;
+ 
+-   for (i = 0; i < ARRAY_SIZE(builtin_backends); ++i) {
+-      bd = &builtin_backends[i];
++   void *lib = loader_open_driver_lib("dri", BACKEND_LIB_SUFFIX,
++                                      backend_search_path_vars,
++                                      DEFAULT_BACKENDS_PATH,
++                                      true);
+ 
+-      if (name && strcmp(bd->name, name))
+-         continue;
+-
+-      dev = backend_create_device(bd, fd);
+-
+-      if (dev)
+-         break;
+-   }
++   if (lib)
++      dev = load_backend(lib, fd, "dri");
+ 
+    if (name && !dev) {
+       lib = loader_open_driver_lib(name, BACKEND_LIB_SUFFIX,
+diff --git a/src/gbm/meson.build b/src/gbm/meson.build
+index df65361aef7..68ec8053264 100644
+--- a/src/gbm/meson.build
++++ b/src/gbm/meson.build
+@@ -29,17 +29,13 @@ files_gbm = files(
+ )
+ deps_gbm = []
+ args_gbm = [
+-  '-DDEFAULT_BACKENDS_PATH="@0@"'.format(gbm_backends_path),
++  '-DDEFAULT_BACKENDS_PATH="@0@"'.format(get_option('gbm-backends-search-path')),
+ ]
+ deps_gbm = []
+ incs_gbm = [
+   include_directories('main'), inc_include, inc_src, inc_loader,
+ ]
+ 
+-if with_dri2
+-  files_gbm += files('backends/dri/gbm_dri.c', 'backends/dri/gbm_driint.h')
+-  deps_gbm += dep_libdrm # TODO: pthread-stubs
+-endif
+ if with_platform_wayland
+   deps_gbm += dep_wayland_server
+   incs_gbm += inc_wayland_drm
+@@ -58,12 +54,27 @@ libgbm = shared_library(
+   c_args : [args_gbm],
+   link_args : [ld_args_gc_sections],
+   link_with : libloader,
+-  dependencies : [deps_gbm, dep_dl, dep_thread, idep_mesautil, idep_xmlconfig],
++  dependencies : [deps_gbm, dep_dl, dep_thread, idep_mesautil, idep_xmlconfig, dep_libdrm],
+   gnu_symbol_visibility : 'hidden',
+   version : '1.0.0',
+   install : true,
+ )
+ 
++if with_dri2
++  libgbm_dri = shared_library(
++    'dri_gbm',
++    files('backends/dri/gbm_dri.c', 'backends/dri/gbm_driint.h'),
++    include_directories : incs_gbm,
++    link_args : [ld_args_gc_sections],
++    link_with : libloader,
++    dependencies : [deps_gbm, dep_libdrm, idep_mesautil, idep_xmlconfig],
++    gnu_symbol_visibility : 'hidden',
++    install : true,
++    install_dir: gbm_backends_path,
++    name_prefix : '',
++  )
++endif
++
+ if with_tests
+   abi_check = executable('gbm_abi_check', 'main/gbm_abi_check.c')
+   test('gbm-abi-check', abi_check, suite : ['gbm'])
+diff --git a/src/mapi/shared-glapi/meson.build b/src/mapi/shared-glapi/meson.build
+index bf84745d19d..0d7813f7341 100644
+--- a/src/mapi/shared-glapi/meson.build
++++ b/src/mapi/shared-glapi/meson.build
+@@ -63,6 +63,7 @@ libglapi = shared_library(
+   version : '0.0.0',
+   name_prefix : host_machine.system() == 'windows' ? 'lib' : [],  # always use lib, but avoid warnings on !windows
+   install : true,
++  install_dir: get_option('glapi-path')
+ )
+ libglapi_build_dir = meson.current_build_dir()
+ 

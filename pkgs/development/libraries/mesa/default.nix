@@ -135,6 +135,7 @@ self = stdenv.mkDerivation {
 
     ./opencl.patch
     ./disk_cache-include-dri-driver-path-in-cache-key.patch
+    ./gbm-split.patch
   ];
 
   postPatch = ''
@@ -187,13 +188,14 @@ self = stdenv.mkDerivation {
     "-Domx-libs-path=${placeholder "drivers"}/lib/bellagio"
     "-Dva-libs-path=${placeholder "drivers"}/lib/dri"
     "-Dd3d-drivers-path=${placeholder "drivers"}/lib/d3d"
+    "-Dgbm-backends-path=${placeholder "drivers"}/lib/gbm"
+    "-Dglapi-path=${placeholder "drivers"}/lib"
+    # To enable non-mesa gbm backends to be found (e.g. Nvidia)
+    "-Dgbm-backends-search-path=${libglvnd.driverLink}/lib/gbm"
 
     "-Dgallium-nine=${lib.boolToString enableGalliumNine}" # Direct3D in Wine
     "-Dosmesa=${lib.boolToString enableOSMesa}" # used by wine
     "-Dmicrosoft-clc=disabled" # Only relevant on Windows (OpenCL 1.2 API on top of D3D12)
-
-    # To enable non-mesa gbm backends to be found (e.g. Nvidia)
-    "-Dgbm-backends-path=${libglvnd.driverLink}/lib/gbm:${placeholder "out"}/lib/gbm"
 
     # meson auto_features enables these features, but we do not want them
     "-Dandroid-libbacktrace=disabled"
