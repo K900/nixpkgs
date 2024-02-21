@@ -60,7 +60,7 @@
   else [ "auto" ]
 , eglPlatforms ? [ "x11" ] ++ lib.optionals stdenv.isLinux [ "wayland" ]
 , vulkanLayers ? lib.optionals (!stdenv.isDarwin) [ "device-select" "overlay" "intel-nullhw" ] # No Vulkan support on Darwin
-, OpenGL, Xplugin
+, OpenGL, Xplugin, memstreamHook
 , withValgrind ? lib.meta.availableOn stdenv.hostPlatform valgrind-light && !valgrind-light.meta.broken, valgrind-light
 , withLibunwind ? lib.meta.availableOn stdenv.hostPlatform libunwind
 , enableGalliumNine ? stdenv.isLinux
@@ -263,7 +263,8 @@ self = stdenv.mkDerivation {
     python3Packages.python python3Packages.mako python3Packages.ply
     jdupes glslang
     rustc rust-bindgen rustPlatform.bindgenHook
-  ] ++ lib.optional haveWayland wayland-scanner;
+  ] ++ lib.optional haveWayland wayland-scanner
+    ++ lib.optional stdenv.isDarwin memstreamHook;
 
   propagatedBuildInputs = with xorg; [
     libXdamage libXxf86vm
