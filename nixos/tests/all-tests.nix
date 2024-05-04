@@ -295,6 +295,8 @@ in {
   activation-etc-overlay-mutable = runTest ./activation/etc-overlay-mutable.nix;
   activation-etc-overlay-immutable = runTest ./activation/etc-overlay-immutable.nix;
   activation-perlless = runTest ./activation/perlless.nix;
+  activation-switch-from-alias = runTest ./activation/switch-from-alias.nix;
+  activation-switch-to-alias = runTest ./activation/switch-to-alias.nix;
   etcd = handleTestOn [ "aarch64-linux" "x86_64-linux" ] ./etcd/etcd.nix {};
   etcd-cluster = handleTestOn [ "aarch64-linux" "x86_64-linux" ] ./etcd/etcd-cluster.nix {};
   etebase-server = handleTest ./etebase-server.nix {};
