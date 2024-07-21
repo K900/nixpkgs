@@ -1,4 +1,4 @@
-testModuleArgs@{ config, lib, hostPkgs, nodes, ... }:
+testModuleArgs@{ config, lib, pkgs, hostPkgs, nodes, ... }:
 
 let
   inherit (lib)
@@ -109,7 +109,7 @@ in
         Setting this will make the `nixpkgs.*` options read-only, to avoid mistakenly testing with a Nixpkgs configuration that diverges from regular use.
       '';
       type = types.nullOr types.pkgs;
-      default = null;
+      default = if pkgs.hostPlatform == hostPkgs.hostPlatform then pkgs else null;
       defaultText = literalMD ''
         `null`, so construct `pkgs` according to the `nixpkgs.*` options as usual.
       '';
@@ -122,7 +122,7 @@ in
         Set this to `false` when any of the [`nodes`](#test-opt-nodes) needs to configure any of the `nixpkgs.*` options. This will slow down evaluation of your test a bit.
       '';
       type = types.bool;
-      default = config.node.pkgs != null;
+      default = false;
       defaultText = literalExpression ''node.pkgs != null'';
     };
 
