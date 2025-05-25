@@ -68,7 +68,7 @@ mkKdeDerivation {
   # the same directory, while it is actually located in a completely different
   # store path
   preFixup = ''
-    ln -sf ${systemsettings}/bin/systemsettings $out/bin/kinfocenter
+    ln -sf ${lib.getExe systemsettings} $out/bin/kinfocenter
   '';
 
   # Hardcoded as a QString, which is UTF-16 so Nix can't pick it up automatically
