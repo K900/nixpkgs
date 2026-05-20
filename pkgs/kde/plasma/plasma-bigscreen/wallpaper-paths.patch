@@ -1,0 +1,15 @@
+Don't hardcode the absolute path to the wallpapers directory in FHS.
+
+diff --git a/lookandfeel/contents/layouts/org.kde.plasma.bigscreen-layout.js b/lookandfeel/contents/layouts/org.kde.plasma.bigscreen-layout.js
+index 4ccd693..0fb19db 100644
+--- a/lookandfeel/contents/layouts/org.kde.plasma.bigscreen-layout.js
++++ b/lookandfeel/contents/layouts/org.kde.plasma.bigscreen-layout.js
+@@ -12,7 +12,7 @@ for (var j = 0; j < desktopsArray.length; j++) {
+
+     desk.currentConfigGroup = new Array("Wallpaper","org.kde.slideshow","General");
+     desk.writeConfig("SlideInterval", 480);
+-    desk.writeConfig("SlidePaths", "/usr/share/wallpapers/");
++    desk.writeConfig("SlidePaths", "/run/current-system/sw/share/wallpapers/");
+
+    if (j == 0) {
+         // Add meta to home default shortcut

@@ -1,0 +1,15 @@
+Don't hardcode the absolute path to the virtual keyboard desktop file in FHS.
+
+diff --git a/envmanager/config.h b/envmanager/config.h
+index 765ef5d..371b7e1 100644
+--- a/envmanager/config.h
++++ b/envmanager/config.h
+@@ -39,7 +39,7 @@ const QMap<QString, QMap<QString, QVariant>> PLASMAKEYBOARDRC_SETTINGS = {{"Gene
+
+ // plasma-bigscreen/kwinrc
+ const QMap<QString, QMap<QString, QVariant>> KWINRC_DEFAULT_SETTINGS = {
+-    {"Wayland", {{"InputMethod", "/usr/share/applications/org.kde.plasma.keyboard.desktop"}}}};
++    {"Wayland", {{"InputMethod", "/run/current-system/sw/share/applications/org.kde.plasma.keyboard.desktop"}}}};
+
+ QMap<QString, QMap<QString, QVariant>> getKwinrcSettings(KSharedConfig::Ptr m_bigscreenConfig)
+ {
