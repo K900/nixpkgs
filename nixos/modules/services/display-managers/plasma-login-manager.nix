@@ -49,7 +49,7 @@ in
       example = {
         Users.ReuseSession = false;
       };
-      description = "Additional settings for Plasma Login Manager (see `man plasmalogin.conf`)";
+      description = "Additional settings for Plasma Login Manager (see https://invent.kde.org/plasma/plasma-login-manager/-/blob/master/src/common/mainconfig.kcfg)";
     };
   };
 
